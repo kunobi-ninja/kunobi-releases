@@ -1,4 +1,4 @@
-name: Update Release
+name: Update Release Assets
 
 on:
   repository_dispatch:
@@ -15,9 +15,10 @@ on:
         options:
           - stable
           - unstable
+        default: unstable
 
 jobs:
-  update-release:
+  update-release-assets:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -47,7 +48,7 @@ jobs:
           fi
 
           if [ -z "$VERSION" ] || [ -z "$CHANNEL" ]; then
-            echo "Error: version and channel are required" >&2
+            echo "Error: ❌ version and channel are required" >&2
             exit 1
           fi
 
@@ -72,7 +73,7 @@ jobs:
         run: |
           if git diff --quiet release_assets.json 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Release already up to date, skipping"
+            echo "ℹ️ Release assets already up to date, skipping"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
@@ -83,7 +84,7 @@ jobs:
         env:
           VERSION: ${{ steps.params.outputs.version }}
         run: |
-          BRANCH="auto/update-v${VERSION}"
+          BRANCH="bot/update-v${VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
@@ -92,20 +93,20 @@ jobs:
           git push --force-with-lease origin "$BRANCH"
           echo "name=$BRANCH" >> $GITHUB_OUTPUT
 
-  validate:
-    needs: update-release
-    if: needs.update-release.outputs.changed == 'true'
-    uses: ./.github/workflows/validate-release.yaml
+  validate-release-assets:
+    needs: update-release-assets
+    if: needs.update-release-assets.outputs.changed == 'true'
+    uses: ./.github/workflows/validate-release-assets.yaml
     with:
-      ref: ${{ needs.update-release.outputs.branch }}
+      ref: ${{ needs.update-release-assets.outputs.branch }}
 
   cleanup:
-    needs: [update-release, validate]
+    needs: [update-release-assets, validate-release-assets]
     if: >-
       always()
-      && needs.validate.result == 'failure'
-      && needs.update-release.outputs.branch != ''
-      && needs.update-release.outputs.branch != 'main'
+      && needs.validate-release-assets.result == 'failure'
+      && needs.update-release-assets.outputs.branch != ''
+      && needs.update-release-assets.outputs.branch != 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -113,14 +114,14 @@ jobs:
       - name: Delete failed branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ needs.update-release.outputs.branch }}
+          BRANCH: ${{ needs.update-release-assets.outputs.branch }}
         run: |
           gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$BRANCH" || true
-          echo "Deleted branch $BRANCH after failed validation"
+          echo "🧹 Deleted branch $BRANCH after failed validation"
 
   create-pr:
-    needs: [update-release, validate]
-    if: needs.update-release.outputs.changed == 'true'
+    needs: [update-release-assets, validate-release-assets]
+    if: needs.update-release-assets.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,9 +130,10 @@ jobs:
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.update-release.outputs.version }}
-          CHANNEL: ${{ needs.update-release.outputs.channel }}
-          BRANCH: ${{ needs.update-release.outputs.branch }}
+          VERSION: ${{ needs.update-release-assets.outputs.version }}
+          CHANNEL: ${{ needs.update-release-assets.outputs.channel }}
+          BRANCH: ${{ needs.update-release-assets.outputs.branch }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh pr create \
             --repo "$GITHUB_REPOSITORY" \
@@ -139,10 +141,11 @@ jobs:
             --base main \
             --title "Update Kunobi to v${VERSION}" \
             --body "$(cat <<EOF
-          Auto-generated and validated by update-release workflow
+          > 🤖 Auto-generated and validated by [update-release-assets](${RUN_URL}) workflow
 
           - **Version**: ${VERSION}
           - **Channel**: ${CHANNEL}
-          - **Release assets**: Verified (sha256 match)
+          - **Release assets**: ✅ SHA256 Verified
+          - **Assets**: ✅ Download and SHA256 Verified 
           EOF
           )"

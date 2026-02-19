@@ -1,9 +1,10 @@
-name: Validate Release
+name: Validate Release Assets
 
 on:
   pull_request:
     paths:
       - 'release_assets.json'
+      - 'release_assets.json.sha256'
   workflow_call:
     inputs:
       ref:
@@ -13,7 +14,7 @@ on:
         default: ''
 
 jobs:
-  validate:
+  validate-release-assets:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,17 +34,17 @@ jobs:
           PLATFORM_COUNT=$(jq '.platforms | length' release_assets.json)
 
           if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            echo "Error: missing version field" >&2
+            echo "Error: ❌ missing version field" >&2
             exit 1
           fi
 
           if [ -z "$CHANNEL" ] || [ "$CHANNEL" = "null" ]; then
-            echo "Error: missing channel field" >&2
+            echo "Error: ❌ missing channel field" >&2
             exit 1
           fi
 
           if [ "$PLATFORM_COUNT" -eq 0 ]; then
-            echo "Error: no platforms found" >&2
+            echo "Error: ❌ no platforms found" >&2
             exit 1
           fi
 
@@ -63,11 +64,11 @@ jobs:
           echo "Actual:   $ACTUAL"
 
           if [ "$EXPECTED" != "$ACTUAL" ]; then
-            echo "Error: SHA256 mismatch!" >&2
+            echo "Error: ❌ SHA256 mismatch!" >&2
             exit 1
           fi
 
-          echo "SHA256 verified successfully"
+          echo "✅ SHA256 verified for release_assets.json"
 
       - name: Verify R2 artifacts and checksums
         run: |
@@ -79,21 +80,21 @@ jobs:
             echo "  Downloading: $filename"
 
             if ! curl -fsSL "$url" -o "$TMPDIR/$filename"; then
-              echo "  Error: failed to download $url" >&2
+              echo "  Error: ❌ failed to download $url" >&2
               exit 1
             fi
 
             actual_sha=$(sha256sum "$TMPDIR/$filename" | cut -d' ' -f1)
             if [ "$expected_sha" != "$actual_sha" ]; then
-              echo "  Error: SHA256 mismatch for $filename" >&2
+              echo "  Error: ❌ SHA256 mismatch for asset $filename" >&2
               echo "    Expected: $expected_sha" >&2
               echo "    Actual:   $actual_sha" >&2
               exit 1
             fi
 
-            echo "  OK (sha256 verified)"
+            echo "  ✅ Download and SHA256 verified for asset $filename"
             rm -f "$TMPDIR/$filename"
           done
 
           rm -rf "$TMPDIR"
-          echo "All artifacts downloaded and checksums verified"
+          echo "✅ All artifacts downloaded and checksums verified"

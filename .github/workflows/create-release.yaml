@@ -44,7 +44,7 @@ jobs:
 
           # Delete existing release if present (allows re-releases)
           if gh release view "v${VERSION}" &>/dev/null; then
-            echo "Release v${VERSION} already exists, replacing..."
+            echo "🧹 Release v${VERSION} already exists, replacing..."
             gh release delete "v${VERSION}" --yes --cleanup-tag
           fi
 
