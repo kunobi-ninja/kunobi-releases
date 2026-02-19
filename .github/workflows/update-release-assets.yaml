@@ -54,7 +54,7 @@ jobs:
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
-          echo "Updating to version: $VERSION (channel: $CHANNEL)"
+          echo "✅ Updating to version: $VERSION (channel: $CHANNEL)"
 
       - name: Download release assets from R2
         env:
@@ -76,6 +76,7 @@ jobs:
             echo "ℹ️ Release assets already up to date, skipping"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Release assets updated"
           fi
 
       - name: Push update branch
@@ -89,9 +90,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add release_assets.json release_assets.json.sha256
-          git commit -m "Update Kunobi to v${VERSION}"
+          git commit -m "[Bot] Update Kunobi to v${VERSION}"
           git push --force-with-lease origin "$BRANCH"
           echo "name=$BRANCH" >> $GITHUB_OUTPUT
+          echo "✅ New branch ${BRANCH} created"
 
   validate-release-assets:
     needs: update-release-assets
@@ -139,9 +141,9 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH" \
             --base main \
-            --title "Update Kunobi to v${VERSION}" \
+            --title "[Bot] Update Kunobi to v${VERSION}" \
             --body "$(cat <<EOF
-          > 🤖 Auto-generated and validated by [update-release-assets](${RUN_URL}) workflow
+          🤖 Auto-generated and validated by [update-release-assets](${RUN_URL}) workflow
 
           - **Version**: ${VERSION}
           - **Channel**: ${CHANNEL}

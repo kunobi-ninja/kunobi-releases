@@ -20,6 +20,11 @@ jobs:
           VERSION=$(jq -r '.version' release_assets.json)
           CHANNEL=$(jq -r '.channel' release_assets.json)
 
+          if [ -z "$VERSION" ] || [ -z "$CHANNEL" ]; then
+            echo "Error: ❌ version and channel are required" >&2
+            exit 1
+          fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
           echo "Version: $VERSION (channel: $CHANNEL)"
