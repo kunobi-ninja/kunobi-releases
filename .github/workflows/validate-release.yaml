@@ -1,0 +1,86 @@
+name: Validate Release
+
+on:
+  pull_request:
+    paths:
+      - 'release_assets.json'
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref to checkout for validation'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Validate JSON structure
+        run: |
+          echo "Validating release_assets.json structure..."
+
+          # Check file exists and is valid JSON
+          jq empty release_assets.json
+
+          # Verify required fields
+          VERSION=$(jq -r '.version' release_assets.json)
+          CHANNEL=$(jq -r '.channel' release_assets.json)
+          PLATFORM_COUNT=$(jq '.platforms | length' release_assets.json)
+
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "Error: missing version field" >&2
+            exit 1
+          fi
+
+          if [ -z "$CHANNEL" ] || [ "$CHANNEL" = "null" ]; then
+            echo "Error: missing channel field" >&2
+            exit 1
+          fi
+
+          if [ "$PLATFORM_COUNT" -eq 0 ]; then
+            echo "Error: no platforms found" >&2
+            exit 1
+          fi
+
+          echo "Version: $VERSION"
+          echo "Channel: $CHANNEL"
+          echo "Platforms: $PLATFORM_COUNT"
+          jq -r '.platforms | keys[]' release_assets.json
+
+      - name: Verify sha256 checksum
+        run: |
+          echo "Verifying release_assets.json checksum..."
+
+          EXPECTED=$(cut -d' ' -f1 release_assets.json.sha256)
+          ACTUAL=$(sha256sum release_assets.json | cut -d' ' -f1)
+
+          echo "Expected: $EXPECTED"
+          echo "Actual:   $ACTUAL"
+
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "Error: SHA256 mismatch!" >&2
+            exit 1
+          fi
+
+          echo "SHA256 verified successfully"
+
+      - name: Verify R2 URLs are accessible
+        run: |
+          echo "Checking R2 URLs are accessible..."
+
+          # Check first URL from each platform
+          jq -r '.platforms | to_entries[] | .value[0].url' release_assets.json | while IFS= read -r url; do
+            echo "  Checking: $url"
+            if ! curl -fsSI "$url" >/dev/null 2>&1; then
+              echo "  Error: URL not accessible: $url" >&2
+              exit 1
+            fi
+            echo "  OK"
+          done
+
+          echo "All R2 URLs accessible"

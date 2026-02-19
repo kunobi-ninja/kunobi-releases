@@ -1,0 +1,50 @@
+name: Create Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'release_assets.json'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version and channel
+        id: info
+        run: |
+          VERSION=$(jq -r '.version' release_assets.json)
+          CHANNEL=$(jq -r '.channel' release_assets.json)
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION (channel: $CHANNEL)"
+
+      - name: Prepare versioned files
+        env:
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          cp release_assets.json "Kunobi_${VERSION}_release_assets.json"
+          cp release_assets.json.sha256 "Kunobi_${VERSION}_release_assets.json.sha256"
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.info.outputs.version }}
+          CHANNEL: ${{ steps.info.outputs.channel }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [[ "$CHANNEL" != "stable" ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          gh release create "v${VERSION}" \
+            "Kunobi_${VERSION}_release_assets.json" \
+            "Kunobi_${VERSION}_release_assets.json.sha256" \
+            --title "Kunobi v${VERSION}" \
+            --notes "Release v${VERSION} (${CHANNEL})" \
+            $PRERELEASE_FLAG
