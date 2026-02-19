@@ -69,18 +69,31 @@ jobs:
 
           echo "SHA256 verified successfully"
 
-      - name: Verify R2 URLs are accessible
+      - name: Verify R2 artifacts and checksums
         run: |
-          echo "Checking R2 URLs are accessible..."
+          echo "Downloading and verifying all artifacts..."
+          TMPDIR=$(mktemp -d)
 
-          # Check first URL from each platform
-          jq -r '.platforms | to_entries[] | .value[0].url' release_assets.json | while IFS= read -r url; do
-            echo "  Checking: $url"
-            if ! curl -fsSI "$url" >/dev/null 2>&1; then
-              echo "  Error: URL not accessible: $url" >&2
+          jq -r '.platforms | to_entries[] | .value[] | "\(.sha256) \(.url)"' release_assets.json | while IFS=' ' read -r expected_sha url; do
+            filename=$(basename "$url")
+            echo "  Downloading: $filename"
+
+            if ! curl -fsSL "$url" -o "$TMPDIR/$filename"; then
+              echo "  Error: failed to download $url" >&2
               exit 1
             fi
-            echo "  OK"
+
+            actual_sha=$(sha256sum "$TMPDIR/$filename" | cut -d' ' -f1)
+            if [ "$expected_sha" != "$actual_sha" ]; then
+              echo "  Error: SHA256 mismatch for $filename" >&2
+              echo "    Expected: $expected_sha" >&2
+              echo "    Actual:   $actual_sha" >&2
+              exit 1
+            fi
+
+            echo "  OK (sha256 verified)"
+            rm -f "$TMPDIR/$filename"
           done
 
-          echo "All R2 URLs accessible"
+          rm -rf "$TMPDIR"
+          echo "All artifacts downloaded and checksums verified"

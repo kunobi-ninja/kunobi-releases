@@ -83,7 +83,7 @@ jobs:
         env:
           VERSION: ${{ steps.params.outputs.version }}
         run: |
-          BRANCH="update-v${VERSION}"
+          BRANCH="auto/update-v${VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"

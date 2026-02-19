@@ -31,7 +31,7 @@ jobs:
           cp release_assets.json "Kunobi_${VERSION}_release_assets.json"
           cp release_assets.json.sha256 "Kunobi_${VERSION}_release_assets.json.sha256"
 
-      - name: Create tag and release
+      - name: Create or update release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.info.outputs.version }}
@@ -40,6 +40,12 @@ jobs:
           PRERELEASE_FLAG=""
           if [[ "$CHANNEL" != "stable" ]]; then
             PRERELEASE_FLAG="--prerelease"
+          fi
+
+          # Delete existing release if present (allows re-releases)
+          if gh release view "v${VERSION}" &>/dev/null; then
+            echo "Release v${VERSION} already exists, replacing..."
+            gh release delete "v${VERSION}" --yes --cleanup-tag
           fi
 
           gh release create "v${VERSION}" \
