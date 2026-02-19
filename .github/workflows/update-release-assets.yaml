@@ -85,12 +85,12 @@ jobs:
         env:
           VERSION: ${{ steps.params.outputs.version }}
         run: |
-          BRANCH="bot/update-v${VERSION}"
+          BRANCH="bot/update-${VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add release_assets.json release_assets.json.sha256
-          git commit -m "[Bot] Update Kunobi to v${VERSION}"
+          git commit -m "[Bot] Update Kunobi to ${VERSION}"
           git push origin "$BRANCH" || git push --force origin "$BRANCH"
           echo "name=$BRANCH" >> $GITHUB_OUTPUT
           echo "✅ New branch ${BRANCH} created"
@@ -141,7 +141,7 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH" \
             --base main \
-            --title "[Bot] Update Kunobi to v${VERSION}" \
+            --title "[Bot] Update Kunobi to ${VERSION}" \
             --body "$(cat <<EOF
           🤖 Auto-generated and validated by [update-release-assets](${RUN_URL}) workflow
 

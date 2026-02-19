@@ -48,14 +48,14 @@ jobs:
           fi
 
           # Delete existing release if present (allows re-releases)
-          if gh release view "v${VERSION}" &>/dev/null; then
-            echo "🧹 Release v${VERSION} already exists, replacing..."
-            gh release delete "v${VERSION}" --yes --cleanup-tag
+          if gh release view "${VERSION}" &>/dev/null; then
+            echo "🧹 Release ${VERSION} already exists, replacing..."
+            gh release delete "${VERSION}" --yes --cleanup-tag
           fi
 
-          gh release create "v${VERSION}" \
+          gh release create "${VERSION}" \
             "Kunobi_${VERSION}_release_assets.json" \
             "Kunobi_${VERSION}_release_assets.json.sha256" \
-            --title "Kunobi v${VERSION}" \
-            --notes "Release v${VERSION} (${CHANNEL})" \
+            --title "Kunobi ${VERSION}" \
+            --notes "Release ${VERSION} (${CHANNEL})" \
             $PRERELEASE_FLAG

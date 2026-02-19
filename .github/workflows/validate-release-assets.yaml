@@ -75,9 +75,9 @@ jobs:
           echo "Downloading and verifying all artifacts..."
           TMPDIR=$(mktemp -d)
 
-          jq -r '.platforms | to_entries[] | .value[] | "\(.sha256) \(.url)"' release_assets.json | while IFS=' ' read -r expected_sha url; do
+          while IFS=' ' read -r expected_sha url; do
             filename=$(basename "$url")
-            echo "  Downloading: $filename"
+            echo "  Downloading from $url"
 
             if ! curl -fsSL "$url" -o "$TMPDIR/$filename"; then
               echo "  Error: ❌ failed to download $url" >&2
@@ -94,7 +94,7 @@ jobs:
 
             echo "  ✅ Download and SHA256 verified for asset $filename"
             rm -f "$TMPDIR/$filename"
-          done
+          done < <(jq -r '.platforms | to_entries[] | .value[] | "\(.sha256) \(.url)"' release_assets.json)
 
           rm -rf "$TMPDIR"
           echo "✅ All artifacts downloaded and checksums verified"
