@@ -1,7 +1,7 @@
 {
   "version": "0.1.0-beta.22",
   "channel": "unstable",
-  "pub_date": "2026-02-23T16:47:29Z",
+  "pub_date": "2026-02-24T14:42:29Z",
   "platforms": {
     "darwin-aarch64": [
       {
@@ -27,7 +27,7 @@
         "url": "https://r2.kunobi.ninja/v0.1.0-beta.22/Kunobi_0.1.0-beta.22_linux_x86_64.rpm"
       },
       {
-        "sha256": "f4b49ca0f7b67b9d756bf1466d4f8b56a70900a7c21152a61f0e543c042cedb7",
+        "sha256": "d9a9f902ff45eb5a4a193676edbdcd986ac08e0dafd950d2fff573cbdc2e56cf",
         "url": "https://r2.kunobi.ninja/v0.1.0-beta.22/Kunobi_0.1.0-beta.22_linux_x86_64.tar.gz"
       }
     ],
