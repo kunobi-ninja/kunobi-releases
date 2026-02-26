@@ -4,16 +4,20 @@ Public release metadata for [Kunobi](https://kunobi.ninja). This repo enables ve
 
 ## Install Kunobi
 
-### Using mise
-
-```bash
-mise use kunobi
-```
-
 ### Using aqua
 
 ```bash
-aqua g -i kunobi-ninja/kunobi-release
+aqua init  # if not already initialized
+aqua g -i kunobi-ninja/kunobi-releases
+aqua i
+```
+
+### Using mise
+
+As Kunobi is registered in the [aqua](https://aquaproj.github.io/) regitry (`aqua:kunobi-ninja/kunobi-releases`), it can be also used directly by mise.
+
+```bash
+mise use aqua:kunobi-ninja/kunobi-releases
 ```
 
 ### Manual download
