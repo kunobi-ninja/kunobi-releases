@@ -1,10 +1,12 @@
-# kunobi-release
+# kunobi-releases
 
-Public release metadata for [Kunobi](https://kunobi.ninja). This repo enables version discovery for package managers (mise/aqua) while keeping the source repository private.
+Public release metadata for [Kunobi](https://kunobi.ninja). This repo enables version discovery by repo tags, for [aqua-registry](https://github.com/aquaproj/aqua-registry) while keeping the source repository private. Also maintains kunobi releases metadata in json, for all kunobi released packages.
 
 ## Install Kunobi
 
 ### Using aqua
+
+Kunobi is registered in the [aqua-registry](https://github.com/aquaproj/aqua-registry/tree/main/pkgs/kunobi-ninja/kunobi-releases) as `kunobi-ninja/kunobi-releases` , so it can be installed using [aqua](https://aquaproj.github.io/)
 
 ```bash
 aqua init  # if not already initialized
@@ -14,7 +16,7 @@ aqua i
 
 ### Using mise
 
-As Kunobi is registered in the [aqua](https://aquaproj.github.io/) regitry (`aqua:kunobi-ninja/kunobi-releases`), it can be also used directly by mise.
+As Kunobi is registered in the [aqua-registry](https://github.com/aquaproj/aqua-registry), it can also be used directly by mise.
 
 ```bash
 mise use aqua:kunobi-ninja/kunobi-releases
@@ -61,7 +63,7 @@ The repo maintains two files that are overwritten on each update:
 
 ## Release structure
 
-Each GitHub release (tagged `v{version}`) contains versioned copies of the assets files:
+Each GitHub release (tagged `{version}`) contains versioned copies of the assets files:
 
 - `Kunobi_{version}_release_assets.json` - Platform artifacts and checksums for the release
 - `Kunobi_{version}_release_assets.json.sha256` - SHA256 checksum of the JSON file
