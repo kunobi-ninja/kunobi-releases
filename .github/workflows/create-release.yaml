@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'release_assets.json'
+      - 'release_assets.json.sha256'
 
 jobs:
   create-release:
